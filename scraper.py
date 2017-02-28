@@ -1,11 +1,61 @@
 import logging
 import json
 import urllib
+import os
+from unidecode import unidecode
 
 from parsers import ComposerPage, ComposerListPage, PiecePage, PageRequestFailure, PageParseFailure
 from db import Composer, Piece, Score
-from settings import COMPOSER_LIST_URL, LOG_NAME
+from settings import COMPOSER_LIST_URL, LOG_NAME, DOWNLOAD_PATH
 from globals import commit_session, DEFAULT_REQUESTER
+
+EXTENSIONS = ['.pdf', '.mid', '.midi', 'xml', 'mxl', '.mus', '.musx',
+              '.sib', '.cap', '.capx', '.ly', '.mscz', '.zip', '.enc', '.nwc']
+
+
+def get_dl_path(metadata):
+    """Computes and creates the path for a file to be downloaded."""
+    composer = unidecode(metadata['Composer']['text'])
+    piece = unidecode(metadata['Title']['text'])
+    piece = piece.replace(' ', '_')
+    composer = composer.replace(' ', '_')
+    piece = piece if piece else "UNKNOWN"
+    composer = composer if composer else "UNKNOWN"
+
+    download_dir = os.path.join(DOWNLOAD_PATH, composer)
+
+    if not os.path.exists(download_dir):
+        os.mkdir(download_dir)
+
+    download_dir = os.path.join(download_dir, piece)
+    if not os.path.exists(download_dir):
+        os.mkdir(download_dir)
+
+    return download_dir
+
+
+def download_score(score, metadata):
+    download_dir = get_dl_path(metadata)
+    file_paths = []
+    for link in score.get('dl_links', []):
+        if not any(link.endswith(x) for x in EXTENSIONS):
+            continue
+        filename = link.split('/')[-1]
+        json_filename = filename.split('.')[0] + '.json'
+        data = DEFAULT_REQUESTER.get(link)
+
+        file_path = os.path.join(download_dir, filename)
+        with open(file_path, 'wb') as f:
+            f.write(data.content)
+
+        score['file_path'] = file_path
+        file_paths.append(file_path)
+        file_path = os.path.join(download_dir, json_filename)
+        with open(file_path, 'w') as f:
+            json.dump(score, f, indent=4)
+        del score['file_path']
+
+    return file_paths
 
 
 class WebScraper:
@@ -14,6 +64,45 @@ class WebScraper:
         """Connect to SQL DB"""
         self._session = db_session
         self._logger = logging.getLogger(LOG_NAME)
+
+    def scrape_pieces_from_list(self, piece_list):
+        # Load the list of things we've already downloaded.
+        downloaded_list_path = os.path.join(DOWNLOAD_PATH, 'downloaded.json')
+        if os.path.exists(downloaded_list_path):
+            with open(downloaded_list_path, 'r') as f:
+                already_downloaded = json.load(f)
+        else:
+            already_downloaded = []
+
+        piece_list = list(set(piece_list) - set(already_downloaded))
+
+        """Quick and dirty way to download a lot of files. Does not use database."""
+        for piece_url in piece_list:
+            try:
+                pp = PiecePage(piece_url)
+                scores, metadata = pp.parse_scores(), pp.parse_metadata()
+            except PageRequestFailure:
+                self._logger.warning("Failed to GET {}".format(piece_url))
+                continue
+            except PageParseFailure:
+                self._logger.warning("Failed to parse {}".format(piece_url))
+                continue
+
+            for score in scores:
+                file_paths = download_score(score, metadata)
+                score['file_paths'] = file_paths
+
+            download_dir = get_dl_path(metadata)
+            json_out = {'piece_metadata': metadata, 'scores': scores}
+            with open(os.path.join(download_dir, 'meta.json'), 'w') as f:
+                json.dump(json_out, f, indent=4)
+
+            # Add this to the list of things we've already downloaded.
+            already_downloaded.append(piece_url)
+            with open(downloaded_list_path, 'w') as f:
+                json.dump(already_downloaded, f)
+
+
 
     def scrape_all_composers(self):
         """Scrapes piece links for every composer in the database.
