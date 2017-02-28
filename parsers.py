@@ -119,6 +119,10 @@ class PiecePage(BaseParser):
                             links.append(children[i].find('a').get('href'))
                         elif children[i].name == 'a':
                             links.append(children[i].get('href'))
+
+                        if '(submitted ' in children[i].text:
+                            metadata['submitted'] = children[i].text.split(' ')[-1][:-1]
+
                     if isinstance(children[i], bsString):
                         tag_text += children[i]
                     i += 1
@@ -163,12 +167,20 @@ class PiecePage(BaseParser):
                 if not isinstance(s, bsTag):
                     continue
                 if s.name == 'ul':
+                    # Get links to scores.
                     parsed_score['dl_links'] = [a.get('href') for a in s.find_all('a')]
+
+                    # Find CPDL number
                     bolds = s.find_all('b')
                     CPDL = [x for x in bolds if x.text.startswith('CPDL')]
                     if CPDL:
                         CPDL = CPDL[0]
                         meta['CPDL#'] = CPDL.text.split('#')[-1][:-1]
+
+                    # Find 'posted' date if it exists.
+                    posted = s.find('small')
+                    if posted and posted.text.startswith('(Posted '):
+                        meta['submitted'] = posted.text.split(' ')[-1][:-1]
                 if s.name == 'dl':
                     for dd in s.find_all('dd'):
                         meta.update(self.parse_metadata_table_row(dd))
