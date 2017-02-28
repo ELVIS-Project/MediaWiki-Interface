@@ -16,7 +16,10 @@ def get_dl_path(metadata):
     """Computes and creates the path for a file to be downloaded."""
     composer = unidecode(metadata['Composer']['text'])
     piece = unidecode(metadata['Title']['text'])
+    piece = piece.replace('/', '-')
     piece = piece.replace(' ', '_')
+
+    composer = composer.replace('/', '-')
     composer = composer.replace(' ', '_')
     piece = piece if piece else "UNKNOWN"
     composer = composer if composer else "UNKNOWN"
