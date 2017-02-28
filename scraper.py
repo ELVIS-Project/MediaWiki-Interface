@@ -6,11 +6,10 @@ from unidecode import unidecode
 
 from parsers import ComposerPage, ComposerListPage, PiecePage, PageRequestFailure, PageParseFailure
 from db import Composer, Piece, Score
-from settings import COMPOSER_LIST_URL, LOG_NAME, DOWNLOAD_PATH
+from settings import COMPOSER_LIST_URL, LOG_NAME, DOWNLOAD_PATH, EXTENSIONS
 from globals import commit_session, DEFAULT_REQUESTER
 
-EXTENSIONS = ['.pdf', '.mid', '.midi', 'xml', 'mxl', '.mus', '.musx',
-              '.sib', '.cap', '.capx', '.ly', '.mscz', '.zip', '.enc', '.nwc']
+
 
 
 def get_dl_path(metadata):
@@ -41,7 +40,6 @@ def download_score(score, metadata):
         if not any(link.endswith(x) for x in EXTENSIONS):
             continue
         filename = link.split('/')[-1]
-        json_filename = filename.split('.')[0] + '.json'
         try:
             data = DEFAULT_REQUESTER.get(link)
         except Exception:
@@ -52,13 +50,7 @@ def download_score(score, metadata):
         file_path = os.path.join(download_dir, filename)
         with open(file_path, 'wb') as f:
             f.write(data.content)
-
-        score['file_path'] = file_path
         file_paths.append(file_path)
-        file_path = os.path.join(download_dir, json_filename)
-        with open(file_path, 'w') as f:
-            json.dump(score, f, indent=4)
-        del score['file_path']
 
     return file_paths
 

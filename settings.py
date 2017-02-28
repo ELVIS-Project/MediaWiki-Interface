@@ -1,5 +1,7 @@
 CW_DOMAIN = 'http://www.cpdl.org/'
 DOWNLOAD_PATH = '/home/lexpar/Documents/DDMAL/media_grabber/downloads'
+EXTENSIONS = ['.pdf', '.mid', '.midi', 'xml', 'mxl', '.mus', '.musx',
+              '.sib', '.cap', '.capx', '.ly', '.mscz', '.zip', '.enc', '.nwc']
 
 PROXY_LIST = []
 FUZZ_RANGE = (0, 10)

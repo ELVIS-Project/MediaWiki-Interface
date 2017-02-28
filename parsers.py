@@ -3,7 +3,7 @@ from bs4.element import Tag as bsTag
 from bs4.element import NavigableString as bsString
 from main import DEFAULT_REQUESTER
 import logging
-from settings import LOG_NAME
+from settings import LOG_NAME, EXTENSIONS
 from requester import RippingError
 
 
@@ -105,7 +105,7 @@ class PiecePage(BaseParser):
         i = 0
         while i < len(children):
             if children[i].name == 'b':
-                tag = children[i].text[:-1]
+                tag = children[i].text.replace(':', '')
                 tag_text = ""
                 links = []
                 i += 1
@@ -136,9 +136,6 @@ class PiecePage(BaseParser):
 
     def _parse_scores(self):
         """Return list of PDFs on page with metadata associated with each pdf."""
-        parsed_scores = self.soup.find_all('a', {'href': lambda x : x and (x.endswith('.mid') or x.endswith('.midi'))})
-        parsed_scores = [x.get('href') for x in parsed_scores]
-
         table_header = self.soup.find('span', id='Music_files').parent
         table_walker = table_header.nextSibling
         score_info = []
@@ -168,7 +165,8 @@ class PiecePage(BaseParser):
                     continue
                 if s.name == 'ul':
                     # Get links to scores.
-                    parsed_score['dl_links'] = [a.get('href') for a in s.find_all('a')]
+                    dl_links = s.find_all('a', {'href': lambda x : x and any(x.endswith(y) for y in EXTENSIONS)})
+                    parsed_score['dl_links'] = [a.get('href') for a in dl_links]
 
                     # Find CPDL number
                     bolds = s.find_all('b')
@@ -183,6 +181,8 @@ class PiecePage(BaseParser):
                         meta['submitted'] = posted.text.split(' ')[-1][:-1]
                 if s.name == 'dl':
                     for dd in s.find_all('dd'):
+                        dl_links = dd.find_all('a', {'href': lambda x: x and any(x.endswith(y) for y in EXTENSIONS)})
+                        parsed_score['dl_links'].extend([a.get('href') for a in dl_links])
                         meta.update(self.parse_metadata_table_row(dd))
                 parsed_score['meta'] = meta
             parsed_scores.append(parsed_score)
