@@ -28,9 +28,9 @@ def start_scrape():
     session = DB_SESSION()
     IS = WebScraper(session)
 
-    with open(os.path.join(DOWNLOAD_PATH, 'motets.json'), 'r') as f:
+    with open(os.path.join(os.path.dirname(DOWNLOAD_PATH), 'motets.json'), 'r') as f:
         motets = json.load(f)
-    with open(os.path.join(DOWNLOAD_PATH, 'renaissance.json'), 'r') as f:
+    with open(os.path.join(os.path.dirname(DOWNLOAD_PATH), 'renaissance.json'), 'r') as f:
         renaissance = json.load(f)
 
     IS.scrape_pieces_from_list(motets)

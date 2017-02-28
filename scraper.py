@@ -50,7 +50,7 @@ def download_score(score, metadata):
         file_path = os.path.join(download_dir, filename)
         with open(file_path, 'wb') as f:
             f.write(data.content)
-        file_paths.append(file_path)
+        file_paths.append(os.path.relpath(file_path, DOWNLOAD_PATH))
 
     return file_paths
 
