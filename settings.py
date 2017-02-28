@@ -1,10 +1,10 @@
 CW_DOMAIN = 'http://www.cpdl.org/'
-DOWNLOAD_PATH = '/home/lexpar/Documents/DDMAL/choral_grabber/downloads'
+DOWNLOAD_PATH = '/home/lexpar/Documents/DDMAL/media_grabber/downloads'
 
 PROXY_LIST = []
 FUZZ_RANGE = (0, 10)
-SQLITE_FILE = '/home/lexpar/Documents/DDMAL/choral_grabber/downloads/db.sqlite'
-LOG_FILE = '/home/lexpar/Documents/DDMAL/choral_grabber/downloads/log'
+SQLITE_FILE = '/home/lexpar/Documents/DDMAL/media_grabber/downloads/db.sqlite'
+LOG_FILE = '/home/lexpar/Documents/DDMAL/media_grabber/downloads/log'
 #SQLITE_FILE = '/mnt/imslp/db.sqlite'
 #LOG_FILE = '/mnt/imslp/grabber.log'
 

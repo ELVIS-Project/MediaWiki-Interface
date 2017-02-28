@@ -42,7 +42,7 @@ class ProxiedFuzzedRequester:
         if wait_time > 0:
             time.sleep(wait_time)
 
-        # If url is relative, assume it is on IMSLP
+        # If url is relative, assume it.
         if url.startswith("/"):
             url = CW_DOMAIN + url
 

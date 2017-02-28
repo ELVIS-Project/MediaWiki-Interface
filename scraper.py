@@ -1,13 +1,14 @@
 import logging
 import json
+import urllib
 
 from parsers import ComposerPage, ComposerListPage, PiecePage, PageRequestFailure, PageParseFailure
 from db import Composer, Piece, Score
 from settings import COMPOSER_LIST_URL, LOG_NAME
-from globals import commit_session
+from globals import commit_session, DEFAULT_REQUESTER
 
 
-class WebScrapper:
+class WebScraper:
 
     def __init__(self, db_session):
         """Connect to SQL DB"""
@@ -133,3 +134,42 @@ class WebScrapper:
         result = self._session.query(Score).filter(Score.url == score_url).count()
         return result == 1
 
+
+class SearchAPIScraper:
+    RESULTS_PER_PAGE = 50
+
+    def __init__(self, base_search_url):
+        self._base_search_url = base_search_url
+        self._scraped_urls = []
+        self._finished = False
+
+    def scrapeAll(self):
+        if self._finished:
+            return self._scraped_urls
+
+        scraped_urls = []
+
+        parsed_url = urllib.parse.urlparse(self._base_search_url)
+        parsed_query = urllib.parse.parse_qs(parsed_url.query)
+        parsed_query['gsrlimit'] = self.RESULTS_PER_PAGE
+
+        temp_url = *parsed_url[0:4], urllib.parse.urlencode(parsed_query, doseq=True), *parsed_url[5:]
+        temp_url = urllib.parse.urlunparse(temp_url)
+
+        resp = DEFAULT_REQUESTER.get(temp_url)
+        resp_json = resp.json()
+        while resp_json.get('query-continue', {}).get('search', {}).get('gsroffset'):
+            results = resp_json.get('query', {}).get('pages', {})
+            for page in results.values():
+                scraped_urls.append(page.get('fullurl'))
+
+            print("Finished scraping {}".format(temp_url))
+
+            parsed_query['gsroffset'] = resp_json['query-continue']['search']['gsroffset']
+            temp_url = *parsed_url[0:4], urllib.parse.urlencode(parsed_query, doseq=True), *parsed_url[5:]
+            temp_url = urllib.parse.urlunparse(temp_url)
+            resp = DEFAULT_REQUESTER.get(temp_url)
+            resp_json = resp.json()
+        self._scraped_urls = scraped_urls
+        self._finished = True
+        return self._scraped_urls

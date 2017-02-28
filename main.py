@@ -13,20 +13,20 @@ from globals import set_should_term_true, EMAILER, DEFAULT_REQUESTER
 
 def start_shell():
     """Opens up an IPython window and a DB session to browse the database."""
-    from scraper import WebScrapper
+    from scraper import WebScraper
     session = DB_SESSION()
-    IS = WebScrapper(session)
+    IS = WebScraper(session)
     IPython.embed()
 
 
 def start_scrape():
     """Searches for things to scrape and gets to work."""
-    from scraper import WebScrapper
+    from scraper import WebScraper
 
     logging.info("Starting to scrape.")
 
     session = DB_SESSION()
-    IS = WebScrapper(session)
+    IS = WebScraper(session)
 
     # Get list of composers into database, if it's not already there.
     if not _already_scraped_composers_list(session):
