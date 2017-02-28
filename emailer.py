@@ -3,6 +3,7 @@ import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+
 class Emailer:
     def __init__(self, smtp_info, outgoing_addr, outgoing_pass):
         """Sends emails easily.
@@ -12,6 +13,10 @@ class Emailer:
             outgoing_addr: Outgoing email address.
             outgoing_pass: Outgoing email password.
         """
+        if not outgoing_addr:
+            raise ValueError("Outgoing email address is required.")
+        if not outgoing_pass:
+            raise ValueError("Outgoing email password is required.")
         self._server = None
         self._smtp_info = smtp_info
         self._addr = outgoing_addr
