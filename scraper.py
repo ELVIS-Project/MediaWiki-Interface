@@ -42,7 +42,12 @@ def download_score(score, metadata):
             continue
         filename = link.split('/')[-1]
         json_filename = filename.split('.')[0] + '.json'
-        data = DEFAULT_REQUESTER.get(link)
+        try:
+            data = DEFAULT_REQUESTER.get(link)
+        except Exception:
+            logger = logging.getLogger(LOG_NAME)
+            logger.warning("Failed to download score at {}".format(link))
+            continue
 
         file_path = os.path.join(download_dir, filename)
         with open(file_path, 'wb') as f:

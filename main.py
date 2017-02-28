@@ -1,12 +1,12 @@
 import IPython
-from bs4 import BeautifulSoup
-import requests
 import logging
 import argparse
 import signal
+import os
+import json
 import datetime
 
-from settings import LOG_FILE
+from settings import LOG_FILE, DOWNLOAD_PATH
 from db import DB_SESSION
 from globals import set_should_term_true, EMAILER, DEFAULT_REQUESTER
 
@@ -28,16 +28,14 @@ def start_scrape():
     session = DB_SESSION()
     IS = WebScraper(session)
 
-    # Get list of composers into database, if it's not already there.
-    if not _already_scraped_composers_list(session):
-        IS.scrape_composer_list()
+    with open(os.path.join(DOWNLOAD_PATH, 'motets.json'), 'r') as f:
+        motets = json.load(f)
+    with open(os.path.join(DOWNLOAD_PATH, 'renaissance.json'), 'r') as f:
+        renaissance = json.load(f)
 
-    # Scrape the links to all pieces from list of composers, for those
-    # which are not yet done.
-    IS.scrape_all_composers()
-
-    # Scrape all piece information
-    IS.scrape_all_pieces()
+    IS.scrape_pieces_from_list(motets)
+    IS.scrape_pieces_from_list(renaissance)
+    logging.info("Done downloading!")
 
 
 def _already_scraped_composers_list(session):
