@@ -94,10 +94,12 @@ class WebScraper:
                 continue
 
             for score in scores:
+                score['piece_url'] = piece_url
                 file_paths = download_score(score, metadata)
                 score['file_paths'] = file_paths
 
             download_dir = get_dl_path(metadata)
+            metadata['piece_url'] = piece_url
             json_out = {'piece_metadata': metadata, 'scores': scores}
             with open(os.path.join(download_dir, 'meta.json'), 'w') as f:
                 json.dump(json_out, f, indent=4)
