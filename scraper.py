@@ -185,6 +185,7 @@ class WebScraper:
                 if not self._score_in_database(dli):
                     db_score = Score(piece=db_piece, composer=db_piece.composer)
                     db_score.url = dli
+                    db_score.file_format = dli.split('.')[-1]
                     db_score.name = score.get('meta', {}).get('CPDL#', '')
                     scores_to_add.append(db_score)
         self._session.add_all(scores_to_add)
@@ -199,18 +200,23 @@ class WebScraper:
 
 
     def download_all_scores(self):
-        for i, score in enumerate(self._session.query(Score).all()):
-            db_piece = score.piece
-            metadata = json.loads(db_piece.json_metadata)
-            file_path = download_score(score, metadata)
-            json_out = {'piece_metadata': metadata}
-            with open(os.path.join(file_path, 'meta.json'), 'w') as f:
-                json.dump(json_out, f, indent=4)
+        for i, score in enumerate(self._session.query(Score).filter(Score.downloaded == False)):
+            try:
+                db_piece = score.piece
+                metadata = json.loads(db_piece.json_metadata)
+                file_path = download_score(score, metadata)
+                if not file_path:
+                    score.failed_scrape = True
+                    continue
+                json_out = {'piece_metadata': metadata}
+                with open(os.path.join(file_path, 'meta.json'), 'w') as f:
+                    json.dump(json_out, f, indent=4)
 
-            score.file_path = str(file_path)
-            score.downloaded = True
-            if i % 10 == 0:
-                self._session.commit()
+                score.file_path = str(file_path)
+                score.downloaded = True
+            finally:
+                if i % 10 == 0:
+                    self._session.commit()
 
         self._session.commit()
 
