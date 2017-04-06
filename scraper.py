@@ -119,7 +119,10 @@ class WebScraper:
         composers = self._session.query(Composer).all()
         for db_comp in composers:
             if not db_comp.all_scraped:
-                self.scrape_composer(db_comp)
+                try:
+                    self.scrape_composer(db_comp)
+                except Exception:
+                    self._logger.warn("Failed to scrape composer {}".format(db_comp.name))
 
     def scrape_all_pieces(self):
         """Scrapes all pieces that are not yet scraped.
@@ -132,8 +135,12 @@ class WebScraper:
             .filter(Piece.scraped == False)\
             .filter(Piece.failed_scrape == False)
         for db_piece in pieces:
-            self.scrape_piece(db_piece)
+            try:
+                self.scrape_piece(db_piece)
+            except Exception:
+                self._logger.warn("Failed to scrape piece {}".format(db_piece.name))
 
+            
     def scrape_composer(self, db_composer):
         """Get all pieces related to a composer into the database."""
 
