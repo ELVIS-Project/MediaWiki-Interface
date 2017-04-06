@@ -9,6 +9,7 @@ from db import Composer, Piece, Score
 from settings import COMPOSER_LIST_URL, LOG_NAME, DOWNLOAD_PATH, EXTENSIONS
 from globals import commit_session, DEFAULT_REQUESTER
 
+
 def get_dl_path(metadata):
     """Computes and creates the path for a file to be downloaded."""
     composer = unidecode(metadata.get('Composer', {}).get('text', ''))
@@ -35,23 +36,23 @@ def get_dl_path(metadata):
 def download_score(score, metadata):
     download_dir = get_dl_path(metadata)
     file_paths = []
-    for link in score.get('dl_links', []):
-        if not any(link.endswith(x) for x in EXTENSIONS):
-            continue
-        filename = link.split('/')[-1]
-        try:
-            data = DEFAULT_REQUESTER.get(link)
-        except Exception:
-            logger = logging.getLogger(LOG_NAME)
-            logger.warning("Failed to download score at {}".format(link))
-            continue
+    link = score.url
+    if not any(link.endswith(x) for x in EXTENSIONS):
+        return False
+    filename = link.split('/')[-1]
+    try:
+        data = DEFAULT_REQUESTER.get(link)
+    except Exception:
+        logger = logging.getLogger(LOG_NAME)
+        logger.warning("Failed to download score at {}".format(link))
+        return False
 
-        file_path = os.path.join(download_dir, filename)
-        with open(file_path, 'wb') as f:
-            f.write(data.content)
-        file_paths.append(os.path.relpath(file_path, DOWNLOAD_PATH))
+    file_path = os.path.join(download_dir, filename)
+    with open(file_path, 'wb') as f:
+        f.write(data.content)
+    file_paths.append(os.path.relpath(file_path, DOWNLOAD_PATH))
 
-    return file_paths
+    return download_dir
 
 
 class WebScraper:
@@ -159,7 +160,7 @@ class WebScraper:
         """Scrape a piece page associated with a database piece entry.
 
         Populates the database with Score objects based on what is parsed
-        off the pgae.
+        off the page.
         """
 
         # Download and parse the piece page
@@ -180,18 +181,40 @@ class WebScraper:
         # Create scores associated with this piece.
         scores_to_add = []
         for score in scores:
-            for dli in score.get('download_links'):
-                if not self._score_in_database(dli['url']):
-                    db_score = Score(**dli, piece=db_piece, composer=db_piece.composer)
+            for dli in score.get('dl_links', []):
+                if not self._score_in_database(dli):
+                    db_score = Score(piece=db_piece, composer=db_piece.composer)
+                    db_score.url = dli
+                    db_score.name = score.get('meta', {}).get('CPDL#', '')
                     scores_to_add.append(db_score)
         self._session.add_all(scores_to_add)
 
         # Save scraping data in DB.
+        metadata['scores'] = scores
         db_piece.json_metadata = json.dumps(metadata)
         db_piece.html_dump = piece_page.get_raw_html()
         db_piece.scraped = True
         commit_session(self._session)
         self._logger.info("Successfully scraped {} scores from piece {}.".format(len(scores_to_add), db_piece.name))
+
+
+    def download_all_scores(self):
+        for i, score in enumerate(self._session.query(Score).all()):
+            db_piece = score.piece
+            metadata = json.loads(db_piece.json_metadata)
+            file_path = download_score(score, metadata)
+            json_out = {'piece_metadata': metadata}
+            with open(os.path.join(file_path, 'meta.json'), 'w') as f:
+                json.dump(json_out, f, indent=4)
+
+            score.file_path = str(file_path)
+            score.downloaded = True
+            if i % 10 == 0:
+                self._session.commit()
+
+        self._session.commit()
+
+
 
     def scrape_composer_list(self, composer_list_url=COMPOSER_LIST_URL):
         """Get all the composers into the database.

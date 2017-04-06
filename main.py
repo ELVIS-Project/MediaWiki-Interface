@@ -22,19 +22,26 @@ def start_shell():
 def start_scrape():
     """Searches for things to scrape and gets to work."""
     from scraper import WebScraper
+    from db import Composer
 
     logging.info("Starting to scrape.")
 
     session = DB_SESSION()
     IS = WebScraper(session)
 
-    with open(os.path.join(os.path.dirname(DOWNLOAD_PATH), 'motets.json'), 'r') as f:
-        motets = json.load(f)
-    with open(os.path.join(os.path.dirname(DOWNLOAD_PATH), 'renaissance.json'), 'r') as f:
-        renaissance = json.load(f)
+    # Get composers into DB
+    if session.query(Composer).count() < 2000:
+        IS.scrape_composer_list()
 
-    IS.scrape_pieces_from_list(motets)
-    IS.scrape_pieces_from_list(renaissance)
+    # Scrape the pieces off composers.
+    IS.scrape_all_composers()
+
+    # Scrape all the piece info off the pages.
+    IS.scrape_all_pieces()
+
+    # Download all the scores.
+    IS.download_all_scores()
+    
     logging.info("Done downloading!")
 
 
