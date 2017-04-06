@@ -205,6 +205,9 @@ class WebScraper:
 
         for composer in all_composers:
             name, url = composer
+            url_split = [x for x in url.split('/') if x]
+            url_split[-1] = 'Category:' + url_split[-1] + '_compositions'
+            url = '/' + '/'.join(url_split)
             db_comp = Composer(name=name, url=url)
             self._session.add(db_comp)
 

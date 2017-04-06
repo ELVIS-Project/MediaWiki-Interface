@@ -1,4 +1,4 @@
-CW_DOMAIN = 'http://www.cpdl.org/'
+CW_DOMAIN = 'http://www3.cpdl.org'
 DOWNLOAD_PATH = '/home/lexpar/Documents/DDMAL/media_grabber/downloads'
 EXTENSIONS = ['.pdf', '.mid', '.midi', 'xml', 'mxl', '.mus', '.musx',
               '.sib', '.cap', '.capx', '.ly', '.mscz', '.zip', '.enc', '.nwc']

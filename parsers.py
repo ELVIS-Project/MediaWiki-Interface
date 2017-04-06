@@ -212,7 +212,7 @@ class CategoryPage(BaseParser):
 
     Used as the base classes for:
         ComposerPage: Get all links to pieces off a composer's page.
-        CompoesrListPage: Get all links to composer pages off the composer list page.
+        ComposerListPage: Get all links to composer pages off the composer list page.
     """
 
     __PARSER_NAME__ = "CategoryPage"
@@ -280,7 +280,7 @@ class ComposerPage(CategoryPage):
     Scrapes all links with class 'categorypagelink' off the page's main table.
     """
     __PARSER_NAME__ = "ComposerPage"
-    __TARGET_LINK_CLASS__ = 'categorypagelink'
+    __TARGET_LINK_CLASS__ = ''
 
 
 class ComposerListPage(CategoryPage):
