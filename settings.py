@@ -13,6 +13,6 @@ LOG_FILE = '/home/lexpar/Documents/DDMAL/media_grabber/downloads/log'
 LOG_NAME = 'web_scraper'
 
 EMAIL_ADRR = 'alex.parmentier@mail.com'
-EMAIL_PASS = ''
+EMAIL_PASS = 'dsfdsf'
 
-COMPOSER_LIST_URL = 'http://imslp.org/wiki/Category:Composers'
+COMPOSER_LIST_URL = 'http://www1.cpdl.org/wiki/index.php/Category:Composers'

@@ -9,9 +9,6 @@ from db import Composer, Piece, Score
 from settings import COMPOSER_LIST_URL, LOG_NAME, DOWNLOAD_PATH, EXTENSIONS
 from globals import commit_session, DEFAULT_REQUESTER
 
-
-
-
 def get_dl_path(metadata):
     """Computes and creates the path for a file to be downloaded."""
     composer = unidecode(metadata.get('Composer', {}).get('text', ''))

@@ -229,7 +229,7 @@ class CategoryPage(BaseParser):
 
         while True:
             category_table = self._get_first_category_div(current_page)
-            category_list = category_table.find_all('a', {'class': self.__TARGET_LINK_CLASS__})
+            category_list = category_table.find_all('a')
             for link in category_list:
                 page_link = link.get('href')
                 name = link.text
@@ -253,11 +253,7 @@ class CategoryPage(BaseParser):
         This solves the problem of multiple unrelated tabs of content being scraped
         at the same time.
         """
-        outer = page.find('div', {'class': 'mw-content-ltr'})
-        inner = outer.find('div', {'class': 'mw-content-ltr'})
-        while inner:
-            outer = inner
-            inner = outer.find('div', {'class': 'mw-content-ltr'})
+        outer = page.findAll('div', {'class': 'mw-content-ltr'})[-1]
         return outer
 
     def _get_next_page_url(self, page):
