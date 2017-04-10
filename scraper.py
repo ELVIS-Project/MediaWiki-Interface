@@ -140,7 +140,7 @@ class WebScraper:
             except Exception:
                 self._logger.warn("Failed to scrape piece {}".format(db_piece.name))
 
-            
+
     def scrape_composer(self, db_composer):
         """Get all pieces related to a composer into the database."""
 
@@ -214,6 +214,7 @@ class WebScraper:
                 file_path = download_score(score, metadata)
                 if not file_path:
                     score.failed_scrape = True
+                    self._logger.warn("Failed to download score at {}".format(score.url))
                     continue
                 json_out = {'piece_metadata': metadata}
                 with open(os.path.join(file_path, 'meta.json'), 'w') as f:
@@ -221,6 +222,7 @@ class WebScraper:
 
                 score.file_path = str(file_path)
                 score.downloaded = True
+                self._logger.info("Successfully downloaded score at {}".format(score.url))
             finally:
                 if i % 10 == 0:
                     self._session.commit()
