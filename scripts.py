@@ -61,6 +61,8 @@ def re_parse_metadata():
     for piece in session.query(Piece):
         # Initialization for this loop
         url, raw_html = piece.url, piece.html_dump
+        if not piece.json_metadata:
+            continue
         old_metadata = json.loads(piece.json_metadata)
 
         # Re parse the page
