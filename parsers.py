@@ -56,6 +56,7 @@ class BaseParser:
             raise PageRequestFailure("Failed to GET page at {}".format(self.url),
                                      original=e)
 
+
 class PiecePage(BaseParser):
     """Responsible for retrieving and parsing a piece page on choralWiki"""
 
@@ -86,7 +87,29 @@ class PiecePage(BaseParser):
         metadata = {}
         for entry in metadata_paragraphs:
             metadata.update(self.parse_metadata_table_row(entry))
+
+        metadata['movements'] = self._parse_movement_metadata()
         return metadata
+
+    def _parse_movement_metadata(self):
+        # There is at least one instance of the id being 'Individual_movements'.
+        table_header = self.soup.find('span', {'id': lambda x: x and x.lower() == 'individual_movements'})
+        if not table_header:
+            return {}
+        table_header = table_header.parent
+        table_walker = table_header.nextSibling
+        movement_metadata = {}
+        mov_name, cpdl = None, None
+        while table_walker.name != 'h2':
+            if table_walker.name == 'p':
+                mov_name = table_walker.text.strip()
+            if table_walker.name == 'ul':
+                cpdl = table_walker.find('b').text.replace('CPDL #', '').replace(':', '')
+                if cpdl and mov_name:
+                    movement_metadata[cpdl] = mov_name
+                    mov_name, cpdl = None, None
+            table_walker = table_walker.nextSibling
+        return movement_metadata
 
     def parse_scores(self):
         try:
@@ -203,6 +226,7 @@ class PiecePage(BaseParser):
                 if stripped_label != 'Purchase':
                     meta[stripped_label] = stripped_value
         return meta
+
 
 class CategoryPage(BaseParser):
     """Abstract class for scraping category pages.
