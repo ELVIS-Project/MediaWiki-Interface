@@ -69,7 +69,7 @@ def re_parse_metadata():
         new_metadata['scores'] = old_metadata['scores']
 
         # Output the new results
-        with open(os.path.join(get_dl_path(old_metadata), 'meta.json', 'w')) as f:
+        with open(os.path.join(get_dl_path(old_metadata), 'meta.json'), 'w') as f:
             json.dump(new_metadata, f)
 
 if __name__ == '__main__':
