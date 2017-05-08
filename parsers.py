@@ -139,9 +139,9 @@ class PiecePage(BaseParser):
                             continue
                         tag_text += children[i].text
                         if children[i].find('a'):
-                            links.append(children[i].find('a').get('href'))
+                            links.append((children[i].find('a').text, children[i].find('a').get('href')))
                         elif children[i].name == 'a':
-                            links.append(children[i].get('href'))
+                            links.append((children[i].text, children[i].get('href')))
 
                         if '(submitted ' in children[i].text:
                             metadata['submitted'] = children[i].text.split(' ')[-1][:-1]
