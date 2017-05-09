@@ -93,7 +93,7 @@ class PiecePage(BaseParser):
 
     def _parse_movement_metadata(self):
         # There is at least one instance of the id being 'Individual_movements'.
-        table_header = self.soup.find('span', {'id': lambda x: x and x.lower() == 'individual_movements'})
+        table_header = self.soup.find('span', {'id': lambda x: x and 'movement' in x.lower()})
         if not table_header:
             return {}
         table_header = table_header.parent
@@ -105,9 +105,7 @@ class PiecePage(BaseParser):
                 mov_name = table_walker.text.strip()
             if table_walker.name == 'ul':
                 cpdl = table_walker.find('b').text.replace('CPDL #', '').replace(':', '')
-                if cpdl and mov_name:
-                    movement_metadata[cpdl] = mov_name
-                    mov_name, cpdl = None, None
+                movement_metadata[cpdl] = mov_name
             table_walker = table_walker.nextSibling
         return movement_metadata
 

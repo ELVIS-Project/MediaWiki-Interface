@@ -69,6 +69,7 @@ def re_parse_metadata():
         parser = PiecePage(url, raw_html)
         new_metadata = parser.parse_metadata()
         new_metadata['scores'] = old_metadata['scores']
+        new_metadata['url'] = piece.url
 
         # Output the new results
         with open(os.path.join(get_dl_path(old_metadata), 'meta.json'), 'w') as f:
